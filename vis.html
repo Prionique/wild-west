@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Word Guessing Game</title>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css' rel='stylesheet' integrity='sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN' crossorigin='anonymous'>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Гра в відгадування слів</h1>
+        <div id="word" class="mb-3 fs-3"></div>
+        <input type="text" id="guess-input" class="form-control mb-3" placeholder="Введіть свій варіант">
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" onclick="game.checkGuess()">Перевірити відповідь</button>
+            <button class="btn btn-secondary" onclick="game.skipWord()">Пропустити слово</button>
+            <button class="btn btn-secondary" onclick="game.previousWord()">Повернутися до попереднього слова</button>
+        </div>
+        <div id="result" class="mt-3 fs-4"></div>
+    </div>
+
+    <script>
+        class WordGuessingGame {
+            constructor(words, repeat) {
+                this.words = words;
+                this.wordKeys = Object.keys(words);
+                this.repeat = repeat;
+                this.wordCounts = {};
+                this.wordKeys.forEach(key => this.wordCounts[key] = repeat);
+                this.currentWordIndex = this.getRandomIndex(this.wordKeys.length);
+                this.previousWordIndex = -1;
+                this.displayCurrentWord();
+            }
+
+            getRandomIndex(max, currentIndex = -1) {
+                let index;
+                do {
+                    index = Math.floor(Math.random() * max);
+                } while (index === currentIndex);
+                return index;
+            }
+
+            displayCurrentWord() {
+                const currentWord = this.wordKeys[this.currentWordIndex];
+                document.getElementById("word").textContent = currentWord;
+            }
+
+            checkGuess() {
+                const userGuess = document.getElementById("guess-input").value.trim().toLowerCase();
+                const currentWord = this.wordKeys[this.currentWordIndex];
+
+                if (this.words[currentWord].includes(userGuess)) {
+                    document.getElementById("result").textContent = "Правильно! Наступне слово...";
+                    if (--this.wordCounts[currentWord] === 0) {
+                        delete this.words[currentWord];
+                        this.wordKeys.splice(this.currentWordIndex, 1);
+                    }
+                    if (this.wordKeys.length > 0) {
+                        this.previousWordIndex = this.currentWordIndex;
+                        this.currentWordIndex = this.getRandomIndex(this.wordKeys.length, this.currentWordIndex);
+                        this.displayCurrentWord();
+                    } else {
+                        document.getElementById("result").textContent = "Вітаємо! Ви відгадали всі слова!";
+                        document.getElementById("guess-input").disabled = true;
+                        document.querySelectorAll("button").forEach(button => button.disabled = true);
+                    }
+                } else {
+                    document.getElementById("result").textContent = "Неправильно. Спробуйте ще раз!";
+                }
+                document.getElementById("guess-input").value = "";
+                document.getElementById("guess-input").focus();
+            }
+
+            skipWord() {
+                if (this.wordKeys.length > 1) {
+                    this.previousWordIndex = this.currentWordIndex;
+                    this.currentWordIndex = this.getRandomIndex(this.wordKeys.length, this.currentWordIndex);
+                    this.displayCurrentWord();
+                }
+                document.getElementById("result").textContent = "";
+                document.getElementById("guess-input").value = "";
+                document.getElementById("guess-input").focus();
+            }
+
+            previousWord() {
+                if (this.previousWordIndex !== -1) {
+                    this.currentWordIndex = this.previousWordIndex;
+                    this.displayCurrentWord();
+                    document.getElementById("result").textContent = "";
+                    document.getElementById("guess-input").value = "";
+                    document.getElementById("guess-input").focus();
+                }
+            }
+        }
+
+        // Initialize the game with words, translations, and repeat parameter
+        const words = {
+            "apple": ["яблуко", "яблуня"],
+            "banana": ["банан"],
+            "orange": ["апельсин", "мандарин"],
+            // Add more words here
+        };
+
+        const repeat = 1;  // Set the repeat parameter as needed
+        const game = new WordGuessingGame(words, repeat);
+
+        // Visibility change event to alert the user
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                alert("Не покидайте сторінку, гра триває!");
+            }
+        });
+    </script>
+
+    <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js' integrity='sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL' crossorigin='anonymous'></script>
+</body>
+</html>
